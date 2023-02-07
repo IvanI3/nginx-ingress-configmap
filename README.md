@@ -2,7 +2,7 @@
 This "project" is a fail2ban action and some supporting configs, which allow to use fail2ban when docker-mailserver runs in Kubernetes container behing nginx-ingress TCP proxy, using HAPROXY mode.
 
 # About
-I've got my own installation of  **super-easy-to-use** mail-server-in-a-box [Docker Mailserver](https://docker-mailserver.github.io/docker-mailserver/edge/). It runs in public cloud, behind the load balancer with nginx-ingress in a Kubernetes container. Basic description of this configuration is [here](https://docker-mailserver.github.io/docker-mailserver/edge/config/advanced/kubernetes/).
+I've got my own installation of  **super-easy-to-use** mail-server-in-a-box [Docker Mailserver](https://docker-mailserver.github.io/docker-mailserver/edge/) aka DMS. It runs in public cloud, behind the load balancer with nginx-ingress in a Kubernetes container. Basic description of this configuration is [here](https://docker-mailserver.github.io/docker-mailserver/edge/config/advanced/kubernetes/).
 
 This configuration doesn't allow to use built-in fail2ban with iptables action, because DMS container does't see real IP addresses at TCP level (DMS works in HAPROXY mode). So, one of the way to block annoying IPs - use nginx-ingress resource.
 
@@ -62,7 +62,7 @@ program = /usr/local/bin/nginx-ingress-configmap
 configmap_path = ingress-nginx-public/ingress-public-ingress-nginx-controller
 
 [Definition]
-# Uncomment if you don't want "unban all" on DMS restart
+# Uncomment if you don't want "unban all" on DMS restart (shutdown)
 # actionflush = true
 
 actionban   = [ -x "<program>" ] && <program> <configmap_path> add <ip>
@@ -79,6 +79,7 @@ echo "[   USR   ]  Adding fail2ban nginx-ingress-configmap action"
 cd /tmp/docker-mailserver
 apt-get update &>/dev/null
 apt-get --yes install python3-pip &>/dev/null
+apt-get clean &>/dev/null
 pip3 install --no-input --no-cache-dir kubernetes==25.3.0 &>/dev/null
 cp nginx-ingress-configmap /usr/local/bin && chmod +x /usr/local/bin/nginx-ingress-configmap
 cp nginx-ingress-configmap.conf /etc/fail2ban/action.d
@@ -114,16 +115,16 @@ $ nginx-ingress-configmap ingress-nginx-public/ingress-public-ingress-nginx-cont
 ```
 
 # Troubleshoting
-You may try:
+You can try:
 1. Check DMS container logs
 1. Run **nginx-ingress-configmap** "out-cluster" with appropriate kubeconfig in ~/.kube and check results/errors
-1. Comment *"&>/dev/null"* from **user-patches.sh** to find possible package installation errors
-1. Exec to DMS container, run **nginx-ingress-configmap** in-cluster manually and check results/errors
+1. Comment *"&>/dev/null"* in **user-patches.sh** to find possible package installation errors
+1. Exec shell in DMS container, run **nginx-ingress-configmap** in-cluster manually and check results/errors
 1. Check **/var/log/fail2ban.log**
-1. Check actual nginx-ingress configmap, using kubectl
+1. Check actual nginx-ingress configmap (yaml), using kubectl
 
 # Disclaimer
 I just share this piece of code "as is", and don't provide any guarantee or support. You can use it, correct it, modify it and also don't use it. Do it on your own risk!
 
 # Thanks
-Thanks to all DMS Team for a really easy and reliable mail-server-in-a-box! Especially, for ARM image support...
+Thanks to all DMS Team for a really handy and reliable mail-server-in-a-box! Especially, for ARM image support.

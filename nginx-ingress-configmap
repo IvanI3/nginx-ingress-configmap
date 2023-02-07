@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+from sys import argv
+from os import environ
+import ipaddress
+from kubernetes import client, config
+
+class CM:
+  CM_STREAM_SNIPPET = 'stream-snippet'
+  CM_COMMENT = '#auto-managed-record-do-not-edit'
+
+  def __init__(self, path):
+    try:
+      self.namespace, self.name = path.split('/')
+    except ValueError as e:
+      raise Exception('incorrect configmap path: ' + path)
+
+    try:
+      if 'KUBERNETES_SERVICE_HOST' in environ:
+        config.load_incluster_config()
+      else:
+        config.load_kube_config()
+      self.api = client.CoreV1Api()
+      self.cm = self.api.read_namespaced_config_map(name=self.name, namespace=self.namespace)
+      self._parse_snippet()
+    except Exception as e:
+      raise Exception('init kubertetes API or parse configmap: ' + str(e))
+
+  def _parse_snippet(self):
+    self.ips = []
+    self.snippet = []
+    if CM.CM_STREAM_SNIPPET in self.cm.data:
+      for line in self.cm.data[CM.CM_STREAM_SNIPPET].split("\n"):
+        split = line.split()
+        if len(split) >= 3 and split[0] == 'deny' and split[2] == CM.CM_COMMENT:
+          self.ips.append(split[1].strip(';'))
+        elif line.strip() != '':
+          self.snippet.append(line.strip())
+
+  def _replace_configmap(self):
+    try:
+      for i in self.ips:
+        self.snippet.append(f'deny {i}; {CM.CM_COMMENT}')
+      self.cm.data[CM.CM_STREAM_SNIPPET] = "\n".join(self.snippet)
+      self.api.replace_namespaced_config_map(self.name, self.namespace, self.cm)
+    except Exception as e:
+      raise Exception('replace configmap: ' + str(e))
+
+  def list(self):
+    for ip in self.ips:
+      print(ip)
+
+  def add(self, ip):
+    if ip in self.ips:
+      print(f'{ip} already in the deny list')
+    else:
+      try:
+        ipaddress.ip_address(ip)
+      except ValueError:
+        raise Exception(f'incorrect IP address: {ip}')
+      self.ips.append(ip)
+      self._replace_configmap()
+
+  def delete(self, ip):
+    if ip in self.ips:
+      self.ips.remove(ip)
+      self._replace_configmap()
+    else:
+      print(f'{ip} not in the deny list')
+
+def usage_exit():
+  print(f'Usage: {argv[0]} namespace/configmap (add <ip> | delete <ip> | list)')
+  exit(1)
+
+def main():
+  try:
+    cm_path = argv[1]
+    command = argv[2]
+    if command != 'list':
+      ip = argv[3]
+  except IndexError:
+    usage_exit()
+
+  try:
+    cm = CM(cm_path)
+    if command == 'list':
+      cm.list()
+    elif command == 'add':
+      cm.add(ip)
+    elif command == 'delete':
+      cm.delete(ip)
+    else:
+      usage_exit()
+  except Exception as e:
+    print('ERROR: ' + str(e))
+    exit(1)
+
+if __name__ == '__main__':
+  main()
