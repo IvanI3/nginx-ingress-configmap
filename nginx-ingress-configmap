@@ -54,9 +54,9 @@ class CM:
       print(f'{ip} already in the deny list')
     else:
       try:
-        ipaddress.ip_address(ip)
+        ipaddress.ip_network(ip)
       except ValueError:
-        raise Exception(f'incorrect IP address: {ip}')
+        raise Exception(f'incorrect IP address/network: {ip}')
       self.ips.append(ip)
       self._replace_configmap()
 
@@ -68,7 +68,7 @@ class CM:
       print(f'{ip} not in the deny list')
 
 def usage_exit():
-  print(f'Usage: {argv[0]} namespace/configmap (add <ip> | delete <ip> | list)')
+  print(f'Usage: {argv[0]} namespace/configmap (add <ip/network> | delete <ip/network> | list)')
   exit(1)
 
 def main():
