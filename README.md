@@ -60,16 +60,11 @@ program = /usr/local/bin/nginx-ingress-configmap
 
 # NGINX ingess controller configmap in format: <namespace>/<name>
 configmap_path = ingress-nginx-public/ingress-public-ingress-nginx-controller
-
-[Definition]
-# Uncomment if you don't want "unban all" on DMS restart (shutdown)
-# actionflush = true
-
-actionban   = [ -x "<program>" ] && <program> <configmap_path> add <ip>
-actionunban = [ -x "<program>" ] && <program> <configmap_path> delete <ip>
 ```
 
 Place this file along with script **nginx-ingress-configmap** to DMS container configration volume aka **"/tmp/docker-mailserver/"**. I don't know which approach you use to handle DMS configuration folder. I use persistent volume for it, so, I just place files on that volume using copy.
+
+You can change MIN_PREFIX in **nginx-ingress-configmap** Python script to lower value. I prefer 24, so all operations in ingress controller will be for C-class network as a minimum scope. E.g. if you ask script to ban/unban address "1.2.3.4" - it will be translated to "1.2.3.0/24". But network input with greater prefix "1.2.0.0/16" - will be unchanged.
 
 ## Update user-patches.sh
 Install **pip** apt-package, and **kubernetes** pip-package into DMS container. Copy action script to **/usr/local/bin/**, action config to **/etc/fail2ban/action.d/**:
