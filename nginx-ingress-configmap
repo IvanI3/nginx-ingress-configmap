@@ -8,7 +8,7 @@ from kubernetes import client, config
 # You can block whole subnets with single IP input from fail2ban, e.g. with =24:
 # $ ./nginx-ingress-configmap namespace/configmap add 1.1.1.1
 # will block 1.1.1.0/24
-MIN_PREFIX = 24
+MIN_PREFIX = 32
 
 class CM:
   CM_STREAM_SNIPPET = 'stream-snippet'
