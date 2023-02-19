@@ -103,10 +103,10 @@ $ kubectl logs -n ingress-nginx-public ingress-public-ingress-nginx-controller-m
 ...
 
 $ nginx-ingress-configmap ingress-nginx-public/ingress-public-ingress-nginx-controller list
-45.XX.YYY.154
-45.XX.YYY.156
-45.XX.YYY.162
-45.XX.YYY.160
+45.XX.YYY.154/32
+45.XX.YYY.156/32
+45.XX.YYY.162/32
+45.XX.YYY.160/32
 ```
 
 # Troubleshoting
