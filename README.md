@@ -6,7 +6,7 @@ I've got my own installation of  **super-easy-to-use** mail-server-in-a-box [Doc
 
 This configuration doesn't allow to use built-in fail2ban with iptables action, because DMS container does't see real IP addresses at TCP level (DMS works in HAPROXY mode). So, one of the way to block annoying IPs - use nginx-ingress resource.
 
-This script manages nginx-ingress configmap data - [stream-snippet](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#stream-snippet) key. Nginx-ingress will reload configmap changes "on-the-fly". You can add/delete/list deny records in this section of ingress configmap. Adding "deny" record to this snippet, block IP address from TCP proxing **for all ports!** with 403 error in nginx-ingress logs.
+This script manages nginx-ingress configmap data - [stream-snippet](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#stream-snippet) key. Nginx-ingress will reload configmap changes "on-the-fly". You can add/delete/list/flush deny-records in this section of ingress configmap. Adding "deny" record to this snippet, blocks IP address from TCP proxing **for all ports!** with 403 error in nginx-ingress logs.
 
 # Installation
 All steps below concerning **DMS installation** (with nginx-ingress proxy). But it could be used as a regular fail2ban action in k8s container ("in-cluster" config) and as CLI command (using standard kubeconfig).
